@@ -7,7 +7,6 @@ main.py
 The entry point for the book reader application.
 """
 
-
 __version_info__ = (0, 0, 1)
 __version__ = '.'.join(map(str, __version_info__))
 __author__ = "Willem van der Jagt"
@@ -18,7 +17,6 @@ import sqlite3
 import pdb
 import signal
 import sys, os
-import rfid
 import config
 import RPi.GPIO as GPIO
 from player import Player
@@ -32,8 +30,6 @@ class BookReader(object):
 
     def __init__(self):
         """Initialize all the things"""
-
-        self.rfid_reader = rfid.Reader(**config.serial)
         
         # setup signal handlers. SIGINT for KeyboardInterrupt
         # and SIGTERM for when running from supervisord
@@ -94,14 +90,10 @@ class BookReader(object):
                     'DELETE FROM progress WHERE book_id = %d' % self.player.book.book_id)
                 self.db_conn.commit()
                 self.player.book.reset()
-
-            rfid_card = self.rfid_reader.read()
-
-            if not rfid_card:
-                continue
-    
-            book_id = rfid_card.get_id()
-
+            
+            
+            book_id = 1000;
+            
             if book_id and book_id != self.player.book.book_id: # a change in book id
 
                 progress = self.db_cursor.execute(

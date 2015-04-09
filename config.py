@@ -22,7 +22,7 @@ __author__ = "Willem van der Jagt"
 
 
 db_file = "%s/%s" % (os.path.dirname(os.path.realpath(__file__)), 'state.db')
-serial = { "port_name" : "/dev/ttyAMA0", "baudrate" : 9600, "string_length" : 14 }
+print db_file
 mpd_conn = { "host" : "localhost", "port" : 6600 }
 gpio_pins = [
     { 'pin_id': 9, 'callback' : 'rewind', 'bounce_time' : 2000 },
