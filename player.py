@@ -139,7 +139,7 @@ class Player(object):
             self.mpd_client.clear()
 
 
-    def play(self, book_id, progress=None):
+    def play(self, book_title, progress=None):
         """Play the book as defined in self.book
         
         1. Get the parts from the current book and add them to the playlsit
@@ -163,7 +163,7 @@ class Player(object):
 
         with self.mpd_client:
 
-            parts = self.mpd_client.search('filename', book_id)
+            parts = self.mpd_client.search('filename', book_title)
     
             if not parts:
                 self.status_light.interrupt('blink_fast', 3)
@@ -174,7 +174,9 @@ class Player(object):
             for part in sorted(parts, cmp=sorter):
                 self.mpd_client.add(part['file'])
 
-            self.book.book_id = book_id
+            self.book.book_title = book_title
+            
+            
             
             if progress:
                 # resume at last known position
@@ -183,6 +185,8 @@ class Player(object):
             else:
                 # start playing from the beginning
                 self.mpd_client.play()
+                
+            print("Now playing: %s %s" % (self.book.book_title, self.book.part))
         
         self.status_light.action = 'blink'
         self.book.file_info = self.get_file_info()
@@ -196,7 +200,7 @@ class Player(object):
         or otherwise we could never listen to that particular book again"""
         
         status = self.get_status()
-        return self.book.book_id is not None and \
+        return self.book.book_title != "" and \
                status['state'] == 'stop' and \
                self.book.part == int(status['playlistlength']) and \
                'time' in self.book.file_info and float(self.book.file_info['time']) - self.book.elapsed < 20

@@ -87,19 +87,19 @@ class BookReader(object):
                 # when at the end of a book, delete its progress from the db
                 # so we can listen to it again
                 self.db_cursor.execute(
-                    'DELETE FROM progress WHERE book_id = %d' % self.player.book.book_id)
+                    'DELETE FROM progress WHERE book_title = "%s"' % self.player.book.book_title)
                 self.db_conn.commit()
                 self.player.book.reset()
             
             
-            book_id = 1000;
+            book_title = "Frank Schaetzing/Mordshunger/";
             
-            if book_id and book_id != self.player.book.book_id: # a change in book id
+            if book_title and book_title != self.player.book.book_title: # a change in book title
 
                 progress = self.db_cursor.execute(
-                        'SELECT * FROM progress WHERE book_id = "%s"' % book_id).fetchone()
+                        'SELECT * FROM progress WHERE book_title = "%s"' % book_title).fetchone()
 
-                self.player.play(book_id, progress)
+                self.player.play(book_title, progress)
 
     def on_playing(self):
 
@@ -114,8 +114,8 @@ class BookReader(object):
         #print "%s second of part %s" % (self.player.book.elapsed,  self.player.book.part)
 
         self.db_cursor.execute(
-                'INSERT OR REPLACE INTO progress (book_id, part, elapsed) VALUES (%s, %d, %f)' %\
-                (self.player.book.book_id, self.player.book.part, self.player.book.elapsed))
+                'INSERT OR REPLACE INTO progress (book_title, part, elapsed) VALUES ("%s", %d, %f)' %\
+                (self.player.book.book_title, self.player.book.part, self.player.book.elapsed))
 
         self.db_conn.commit()
 

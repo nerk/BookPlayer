@@ -20,7 +20,7 @@ class Book(object):
     def __init__(self):
         """Initialize"""
 
-        self.book_id = None
+        self.book_title = ""
         self.part = 1
         self.elapsed = .0
         self.file_info = None
@@ -39,5 +39,5 @@ class Book(object):
 
     def is_playing(self):
         """returns if we have a current book"""
-        return self.book_id is not None
+        return self.book_title != ""
 
