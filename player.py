@@ -19,6 +19,7 @@ from threading import Lock
 from book import Book
 import config
 import re
+import os
 
 
 class LockableMPDClient(MPDClient):
@@ -164,18 +165,21 @@ class Player(object):
         with self.mpd_client:
 
             parts = self.mpd_client.search('filename', book_title)
-    
+            
             if not parts:
                 self.status_light.interrupt('blink_fast', 3)
                 return
-
+                
             self.mpd_client.clear()
             
             for part in sorted(parts, cmp=sorter):
                 self.mpd_client.add(part['file'])
 
+            """ Start with first book part if no book_tile specified """
+            if not book_title:
+                book_title = os.path.dirname(parts[0]['file']) + "/"
+                
             self.book.book_title = book_title
-            
             
             
             if progress:

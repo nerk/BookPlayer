@@ -79,7 +79,18 @@ class BookReader(object):
         1. Stop playback of the current book if one is playing
         2. Start playing
         """
-
+        
+        """Start with saved active book
+        If there is currently none, use empty string as book title.
+        This causes player to start with first book in collection.
+        """
+        book_title = ""
+        current = self.db_cursor.execute(
+                        'SELECT * FROM currentbook').fetchone()
+                        
+        if current:
+            book_title = current[0]
+                         
         while True:
             if self.player.is_playing():
                 self.on_playing()
@@ -91,15 +102,25 @@ class BookReader(object):
                 self.db_conn.commit()
                 self.player.book.reset()
             
-            
-            book_title = "Frank Schaetzing/Mordshunger/";
-            
-            if book_title and book_title != self.player.book.book_title: # a change in book title
+            if book_title:
+                if book_title != self.player.book.book_title: # a change in book title
 
-                progress = self.db_cursor.execute(
+                    progress = self.db_cursor.execute(
                         'SELECT * FROM progress WHERE book_title = "%s"' % book_title).fetchone()
 
-                self.player.play(book_title, progress)
+                    self.player.play(book_title, progress)
+            else:
+                """No title given, start with first book in collection"""
+                self.player.play(book_title)
+                book_title = self.player.book.book_title
+                
+                """Save title to database"""
+                self.db_cursor.execute(
+                    'INSERT OR REPLACE INTO currentbook (book_title) VALUES ("%s")' %\
+                    (self.player.book.book_title))
+
+                self.db_conn.commit()
+
 
     def on_playing(self):
 

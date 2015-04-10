@@ -3,3 +3,7 @@ create table progress(
     elapsed float not null,
     part int not null
 );
+
+create table currentbook(
+    book_title text PRIMARY KEY
+);
