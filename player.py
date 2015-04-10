@@ -17,6 +17,7 @@ __author__ = "Willem van der Jagt"
 from mpd import MPDClient
 from threading import Lock
 from book import Book
+from subprocess import call
 import config
 import re
 import os
@@ -42,13 +43,15 @@ class Player(object):
     """The class responsible for playing the audio books"""
 
     def __init__(self, conn_details, status_light):
-        """Setup a connection to MPD to be able to play audio.
         
+        """Setup a connection to MPD to be able to play audio.
         Also update the MPD database with any new MP3 files that may have been added
         and clear any existing playlists.
         """
         self.status_light = status_light
         self.book = Book()
+        self.book_titles = []
+        self.current_index = -1;
 
         self.mpd_client = LockableMPDClient()
         with self.mpd_client:
@@ -57,6 +60,15 @@ class Player(object):
             self.mpd_client.update()
             self.mpd_client.clear()
             self.mpd_client.setvol(100)
+            
+            files = self.mpd_client.search('filename', ".mp3")
+            if not files:
+                self.status_light.interrupt('blink_fast', 3)
+            else:
+                for file in files:
+                    book_title = os.path.dirname(file['file']) + "/"
+                    if book_title not in self.book_titles:
+                        self.book_titles.append(book_title) 
 
 
     def toggle_pause(self, channel):
@@ -141,6 +153,9 @@ class Player(object):
 
 
     def play(self, book_title, progress=None):
+        
+        print "Play title: " , book_title
+        
         """Play the book as defined in self.book
         
         1. Get the parts from the current book and add them to the playlsit
@@ -161,9 +176,11 @@ class Player(object):
             except:
                 return 0
 
-
+            
         with self.mpd_client:
-
+            
+            self.set_title_index(book_title)
+            
             parts = self.mpd_client.search('filename', book_title)
             
             if not parts:
@@ -174,10 +191,6 @@ class Player(object):
             
             for part in sorted(parts, cmp=sorter):
                 self.mpd_client.add(part['file'])
-
-            """ Start with first book part if no book_tile specified """
-            if not book_title:
-                book_title = os.path.dirname(parts[0]['file']) + "/"
                 
             self.book.book_title = book_title
             
@@ -196,6 +209,42 @@ class Player(object):
         self.book.file_info = self.get_file_info()
 
 
+    def get_book_titles(self):
+        return self.book_titles
+        
+        
+    def first_title(self):
+        if len(self.book_titles) == 0:
+            self.status_light.interrupt('blink_fast', 3)
+            return ""
+        
+        with self.mpd_client:
+           self.current_index = 0;
+           return self.book_titles[0]
+        
+    def next_title(self, channel): 
+        if len(self.book_titles) <= self.current_index + 1:
+            return self.first_title()
+        
+        self.current_index += 1
+        return self.book_titles[self.current_index]
+    
+    def get_title(self):
+        if self.current_index < 0 or len(self.book_titles) <= self.current_index:
+            return ""
+          
+        return self.book_titles[self.current_index]  
+        
+    def set_title_index(self, book_title):
+        idx = self.book_titles.index(book_title)
+        if idx >= 0:
+            self.current_index = idx
+    
+    def get_parts(self, book_title):
+        with self.mpd_client:
+
+            return self.mpd_client.search('filename', book_title)
+        
     def is_playing(self):
         return self.get_status()['state'] == 'play'
 

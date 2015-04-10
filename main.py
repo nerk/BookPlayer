@@ -22,6 +22,7 @@ import RPi.GPIO as GPIO
 from player import Player
 from status_light import StatusLight
 from threading import Thread
+import subprocess
 
 class BookReader(object):
 
@@ -43,8 +44,8 @@ class BookReader(object):
         self.setup_db()
         self.player = Player(config.mpd_conn, self.status_light)
         self.setup_gpio()
-
-
+        
+        
     def setup_db(self):
         """Setup a connection to the SQLite db"""
 
@@ -84,13 +85,17 @@ class BookReader(object):
         If there is currently none, use empty string as book title.
         This causes player to start with first book in collection.
         """
-        book_title = ""
-        current = self.db_cursor.execute(
-                        'SELECT * FROM currentbook').fetchone()
-                        
-        if current:
-            book_title = current[0]
-                         
+        book_title = reader.get_active_book_title()
+        if not book_title:
+            book_title = self.player.first_title()
+                   
+        print "Titles " , self.player.get_book_titles()
+        print "Active title ", book_title
+        
+        #print "First " , self.player.first_title()
+        #print "Next " , self.player.next_title()
+        #print "Next " , self.player.next_title()
+        
         while True:
             if self.player.is_playing():
                 self.on_playing()
@@ -101,27 +106,53 @@ class BookReader(object):
                     'DELETE FROM progress WHERE book_title = "%s"' % self.player.book.book_title)
                 self.db_conn.commit()
                 self.player.book.reset()
+                # advance to next book
+                self.player.next_title()
             
+            title = self.player.get_title()
+            
+            if title and title != book_title:
+                book_title = title
+                
             if book_title:
-                if book_title != self.player.book.book_title: # a change in book title
-
+                if book_title != self.player.book.book_title: 
+                    reader.speak(book_title)
                     progress = self.db_cursor.execute(
                         'SELECT * FROM progress WHERE book_title = "%s"' % book_title).fetchone()
 
                     self.player.play(book_title, progress)
-            else:
-                """No title given, start with first book in collection"""
-                self.player.play(book_title)
-                book_title = self.player.book.book_title
+                    reader.save_active_book_title(book_title)
+
+    def save_active_book_title(self, book_title):
                 
-                """Save title to database"""
-                self.db_cursor.execute(
-                    'INSERT OR REPLACE INTO currentbook (book_title) VALUES ("%s")' %\
-                    (self.player.book.book_title))
+        self.db_cursor.execute('DELETE FROM currentbook')
+        
+        """Save currently playing book title to database"""
+        self.db_cursor.execute(
+            'INSERT OR REPLACE INTO currentbook (book_title) VALUES ("%s")' %\
+                (book_title))
 
-                self.db_conn.commit()
-
-
+        self.db_conn.commit()
+        self.player.set_title_index(book_title)
+        
+    def get_active_book_title(self):
+                
+        """Get current book title from database or empty string
+        """
+        current = self.db_cursor.execute(
+                        'SELECT * FROM currentbook').fetchone()
+                        
+        if current:
+            return current[0]
+        else:
+            return ""
+        
+    def speak(self, text):
+        FNULL = open(os.devnull, 'w')
+        subprocess.call(["mpc", "stop"], stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
+        FNULL = open(os.devnull, 'w')
+        subprocess.call(["espeak", "-vde+m3", "-s100", "-g4", text], stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
+        
     def on_playing(self):
 
         """Executed for each loop execution. Here we update self.player.book with the latest known position
