@@ -148,10 +148,18 @@ class BookReader(object):
             return ""
         
     def speak(self, text):
+        text = text[:-1]
+        
+        for c in ['/', ',', '!']:
+            text = text.replace(c, '<break time="500ms"/>')
+        
         FNULL = open(os.devnull, 'w')
         subprocess.call(["mpc", "stop"], stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
+        subprocess.call(["pico2wave", "-lde-DE", "-w/tmp/tts.wav", text])
         FNULL = open(os.devnull, 'w')
-        subprocess.call(["espeak", "-vde+m3", "-s100", "-g4", text], stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
+        subprocess.call(["aplay", "/tmp/tts.wav"], stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
+        #FNULL = open(os.devnull, 'w')
+        #subprocess.call(["espeak", "-vde+m3", "-s100", "-g4", text], stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
         
     def on_playing(self):
 
