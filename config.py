@@ -25,7 +25,8 @@ db_file = "%s/%s" % (os.path.dirname(os.path.realpath(__file__)), 'state.db')
 print db_file
 mpd_conn = { "host" : "localhost", "port" : 6600 }
 gpio_pins = [
-    #{ 'pin_id': 9, 'callback' : 'rewind', 'bounce_time' : 2000 },
+    { 'pin_id': 21, 'callback' : 'rewind', 'bounce_time' : 2000 }, # Board Rev. 1
+    #{ 'pin_id': 27, 'callback' : 'rewind', 'bounce_time' : 2000 }, # Board Rev. 2
     { 'pin_id': 11, 'callback' : 'toggle_pause', 'bounce_time' : 2000 },
     { 'pin_id': 9, 'callback' : 'next_title', 'bounce_time' : 2000 },
     { 'pin_id': 22, 'callback' : 'volume_down', 'bounce_time' : 1000 },
