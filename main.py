@@ -109,14 +109,15 @@ class BookReader(object):
                 # advance to next book
                 self.player.next_title()
             
-            title = self.player.get_title()
+            currently_playing_title = self.player.book.book_title
             
+            title = self.player.get_title()
             if title and title != book_title:
                 book_title = title
-                
+                                
             if book_title:
-                if book_title != self.player.book.book_title: 
-                    reader.speak(book_title)
+                if book_title != currently_playing_title: 
+                    reader.speak(book_title);
                     progress = self.db_cursor.execute(
                         'SELECT * FROM progress WHERE book_title = "%s"' % book_title).fetchone()
 
