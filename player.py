@@ -119,13 +119,13 @@ class Player(object):
 
     def volume_up(self, channel):
         volume = int(self.get_status()['volume'])
-        self.set_volume(min(volume + 10, 100))
+        self.set_volume(min(volume + 5, 100))
 
 
     def volume_down(self, channel):
 
         volume = int(self.get_status()['volume'])
-        self.set_volume(max(volume - 10, 0))
+        self.set_volume(max(volume - 5, 0))
 
 
     def set_volume(self, volume):
