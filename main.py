@@ -143,17 +143,19 @@ class BookReader(object):
         current = self.db_cursor.execute(
                         'SELECT * FROM currentbook').fetchone()
                         
-        if current:
+        if current and current in self.player.get_book_titles():
             return current[0]
         else:
             return ""
         
     def speak(self, text):
         text = text[:-1]
+        text = text.replace('_', ' ')
         
         for c in ['/', ',', '!']:
             text = text.replace(c, '<break time="500ms"/>')
         
+
         FNULL = open(os.devnull, 'w')
         subprocess.call(["mpc", "stop"], stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
         subprocess.call(["pico2wave", "-lde-DE", "-w/tmp/tts.wav", text])
