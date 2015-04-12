@@ -133,7 +133,6 @@ class Player(object):
         self.status_light.interrupt('blink_fast', 3)
         with self.mpd_client:
             self.mpd_client.setvol(volume)
-            print "volume set to %d" % volume
 
 
     def stop(self):
@@ -166,11 +165,11 @@ class Player(object):
         def sorter(file1, file2):
 
             """sorting algorithm for files in playlist"""
-            pattern = '(\d+)(-(\d+))?\.mp3'
+            pattern = '(\d+)(-(.+))?\.mp3'
             
             try:
-                file1_index = re.search(pattern, file1).groups()[2] or 0
-                file2_index = re.search(pattern, file2).groups()[2] or 0
+                file1_index = re.search(pattern, file1).groups()[1] or 0
+                file2_index = re.search(pattern, file2).groups()[1] or 0
 
                 return -1 if int(file1_index) < int(file2_index) else 1
             except:
