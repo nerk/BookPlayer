@@ -84,7 +84,9 @@ TBD: I will describe details about configuration and installation later.
 
 Copyright (C) 2015 Thomas Kern
 
-Licensed under MIT License.
+
+Licensed under MIT License. See https://raw.githubusercontent.com/nerk/BookPlayer/master/LICENSE.txt[LICENSE] for details.
+
 
 Based on https://github.com/wkjagt/BookPlayer[BookPlayer],
 Copyright (C) Willem van der Jagt.
