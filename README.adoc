@@ -62,8 +62,16 @@ which goes into the Raspi's audio socket. To make it fit, the plastic case of th
 image::doc/floppy.jpg[]
 +
 They work very well for connecting buttons and LED to the pin header. There are only
-three wires per socket, but that can be easily fixed by carefully removing one wire
-from another spare socket and inserting it into the empty position.
+three wires per plug, but that can be easily fixed by carefully removing one wire
+from another spare plug and inserting it into the empty position.
+
+The following picture shows how buttons and LED are wired to the plugs
+and the position of the plugs on the pin header.
+
+image::doc/buttons.png[]
+
+CAUTION: GPIO numbering changed between board revisions. If your board is Rev. 2 (most likely),
+you must make a small change in file config.py!
 
 Since my version of the Raspberry Pi had no mounting holes, I used the bottom part of
 a cheap Raspberry Pi case for mounting. The bottom was glued with epoxy to the 
@@ -196,7 +204,49 @@ chmod 755 /home/pi/BookPlayer/start
 
 === Audiobook Structure
 
-TDB
+Audiobooks must be put into the MPD `music_directory` folder you configured above. In case you
+left it unchanged it defaults to `/var/lib/mpd/music`.
+
+The directory structure for each book is pretty simple and as follows:
+
+----
+author name/
+   title of the book/
+      01-first track.mp3
+      02-second track.mp3
+      03-third track.mp3
+----
+
+For a multi-disc book, the tracks of all CDs must be in a common directory with 
+appropriate track numbering, e.g.:
+
+----
+author name/
+   title of the book/
+      101-first track first cd.mp3
+      102-second track first cd.mp3
+      201-first track second cd.mp3
+      202-second track second cd.mp3
+----
+
+The player will speak the actual name of the author and the title of the book by reading
+the directory names. Each track must start with a unique number in correct order, followed by
+a dash with the suffix of `.mp3`. The actual name of the track is arbitrary.
+
+A very convenient way to create this structure is to rip CDs with `abcde`. It will 
+also handle multi CD books when used with commandline option `-W`, followed by
+the number of the CD:
+
+----
+$ abcde -W1
+$ abcde -W2
+----
+
+== Shortcomings and Improvements
+
+* Parts of the code might not really be thread-safe, should be reviewed.
+* The way button presses are handled could be improved. Implementation
+  of an event queue might be a way to ensure that no button events are lost.
 
 == Copyright and License
 
