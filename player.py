@@ -16,6 +16,7 @@ __author__ = "Willem van der Jagt"
 
 from mpd import MPDClient
 from threading import Lock
+from threading import RLock
 from book import Book
 from subprocess import call
 import config
@@ -51,6 +52,8 @@ class Player(object):
         self.status_light = status_light
         self.book = Book()
         self.book_titles = []
+        
+        self.index_lock = RLock()
         self.current_index = -1;
 
         self.mpd_client = LockableMPDClient()
@@ -86,33 +89,31 @@ class Player(object):
                 self.status_light.interrupt('blink_fast', 3)
 
     def rewind(self, channel):
-        """Rewind by 20s"""
-
+        """Rewind by 30s"""
         self.status_light.interrupt('blink_fast', 3)
-        
         if self.is_playing():
             song_index = int(self.book.part) - 1
             elapsed = int(self.book.elapsed)
 
             with self.mpd_client:
 
-                if elapsed > 20:
+                if elapsed > 30:
                     # rewind withing current file if possible
-                    self.mpd_client.seek(song_index, elapsed - 20)
+                    self.mpd_client.seek(song_index, elapsed - 30)
                 elif song_index > 0:
-                    # rewind to previous file if we're not yet 20 seconds into
+                    # rewind to previous file if we're not yet 30 seconds into
                     # the current file
                     prev_song = self.mpd_client.playlistinfo(song_index - 1)[0]
                     prev_song_len = int(prev_song['time'])
 
-                    # if the previous part is longer than 20 seconds, rewind to 20
+                    # if the previous part is longer than 30 seconds, rewind to 30
                     # seconds before the end, otherwise rewind to the start of it
-                    if prev_song_len > 20:
-                        self.mpd_client.seek(song_index - 1, prev_song_len - 20)
+                    if prev_song_len > 30:
+                        self.mpd_client.seek(song_index - 1, prev_song_len - 30)
                     else:
                         self.mpd_client.seek(song_index - 1, 0)
                 else:
-                    # if we're less than 20 seconds into the first part, rewind
+                    # if we're less than 30 seconds into the first part, rewind
                     # to the start of it
                     self.mpd_client.seek(0, 0)
 
@@ -153,7 +154,7 @@ class Player(object):
 
     def play(self, book_title, progress=None):
         
-        print "Play title: " , book_title
+        #print "Play title: " , book_title
         
         """Play the book as defined in self.book
         
@@ -175,7 +176,7 @@ class Player(object):
             except:
                 return 0
 
-            
+        
         with self.mpd_client:
             
             self.set_title_index(book_title)
@@ -202,7 +203,7 @@ class Player(object):
                 # start playing from the beginning
                 self.mpd_client.play()
                 
-            print("Now playing: %s %s" % (self.book.book_title, self.book.part))
+            #print("Now playing: %s %s" % (self.book.book_title, self.book.part))
         
         self.status_light.action = 'blink'
         self.book.file_info = self.get_file_info()
@@ -216,32 +217,35 @@ class Player(object):
         if len(self.book_titles) == 0:
             self.status_light.interrupt('blink_fast', 3)
             return ""
-        
-        with self.mpd_client:
-           self.current_index = 0;
-           return self.book_titles[0]
+    
+        with self.index_lock:
+            self.current_index = 0;
+                
+            return self.book_titles[0]
         
     def next_title(self, channel): 
-        if len(self.book_titles) <= self.current_index + 1:
-            return self.first_title()
+        with self.index_lock:
+            if len(self.book_titles) <= self.current_index + 1:
+                return self.first_title()
         
-        self.current_index += 1
-        return self.book_titles[self.current_index]
+            self.current_index += 1
+            return self.book_titles[self.current_index]
     
     def get_title(self):
-        if self.current_index < 0 or len(self.book_titles) <= self.current_index:
-            return ""
+        with self.index_lock:
+            if self.current_index < 0 or len(self.book_titles) <= self.current_index:
+                return ""
           
-        return self.book_titles[self.current_index]  
+            return self.book_titles[self.current_index]  
         
     def set_title_index(self, book_title):
-        idx = self.book_titles.index(book_title)
-        if idx >= 0:
-            self.current_index = idx
+        with self.index_lock:
+            idx = self.book_titles.index(book_title)
+            if idx >= 0:
+                self.current_index = idx
     
     def get_parts(self, book_title):
         with self.mpd_client:
-
             return self.mpd_client.search('filename', book_title)
         
     def is_playing(self):
@@ -271,5 +275,6 @@ class Player(object):
 
     def close(self):
         self.stop()
-        self.mpd_client.close()
-        self.mpd_client.disconnect()
+        with self.mpd_client:
+            self.mpd_client.close()
+            self.mpd_client.disconnect()
