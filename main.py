@@ -89,14 +89,12 @@ class BookReader(object):
         if not book_title:
             book_title = self.player.first_title()
                    
-        print "Titles " , self.player.get_book_titles()
-        print "Active title ", book_title
+        #print "Titles " , self.player.get_book_titles()
+        #print "Active title ", book_title
         
-        #print "First " , self.player.first_title()
-        #print "Next " , self.player.next_title()
-        #print "Next " , self.player.next_title()
         
         while True:
+            
             if self.player.is_playing():
                 self.on_playing()
             elif self.player.finished_book():
@@ -118,11 +116,15 @@ class BookReader(object):
             if book_title:
                 if book_title != currently_playing_title: 
                     reader.speak(book_title);
-                    progress = self.db_cursor.execute(
+                    title = self.player.get_title()
+                    if title == book_title:
+                        progress = self.db_cursor.execute(
                         'SELECT * FROM progress WHERE book_title = "%s"' % book_title).fetchone()
 
-                    self.player.play(book_title, progress)
-                    reader.save_active_book_title(book_title)
+                        self.player.play(book_title, progress)
+                        reader.save_active_book_title(book_title)
+                    
+            time.sleep(1)
 
     def save_active_book_title(self, book_title):
                 
@@ -161,8 +163,6 @@ class BookReader(object):
         subprocess.call(["pico2wave", "-lde-DE", "-w/tmp/tts.wav", text])
         FNULL = open(os.devnull, 'w')
         subprocess.call(["aplay", "/tmp/tts.wav"], stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
-        #FNULL = open(os.devnull, 'w')
-        #subprocess.call(["espeak", "-vde+m3", "-s100", "-g4", text], stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
         
     def on_playing(self):
 
