@@ -10,7 +10,7 @@ It is suprisingly difficult to find an easy to use commercial version of a
 player specifically designed to play audio books with the following requirements:
 
 * Very easy to use, in particular for elderly persons with impared eyesight. Tiny displays, 
-  tiny buttons, and lots of functions won't work!
+  tiny buttons, and lots of functions *won't work!*
 * The device should always keep track of the current book and reading position. 
   Turning the device on should automatically continue reading from the last position.
 * Skipping forward to a particular chapter in a book ist *not* a requirement.
@@ -25,7 +25,7 @@ handle one single book at a time.
 Then there is Willem van der Jagt's https://gist.github.com/wkjagt/814b3f62ea03c7b1a765[BookPlayer],
 which has all the required features. For selection of a specific audio book, it uses a
 built-in RFID reader. Each book is associated with an RFID tag and reading the tag selects 
-the book and starts reading. Although using RFID player is pretty slick, I did not like the
+the book and starts reading. Although using RFID is pretty slick, I did not like the
 idea of having to deal with a bunch of tags in addition to the player.
 
 I therefore decided to use Willem van der Jagt's design as a basis, but to remove the RFID
@@ -33,7 +33,8 @@ feature. Instead, I added a button which allows the user to cycle through the st
 Author and title of a selected book are read to the user using a text-to-speach engine.
 
 For maintenance or updating the audio books on the player, I plug a WIFI dongle into an
-USB port, which automatically connects to my network. I then use ssh and sftp.
+USB port, which automatically connects to my network. I then use ssh for mainteance and sftp
+for transferring books. On Windows, WinSCP works very well, too.
 
 == Hardware
 
@@ -41,13 +42,15 @@ image::doc/player2.jpg[]
 
 The hardware is pretty straightforward, this is what I used:
 
-* Raspberry Pi (I used a model B Rev. 1 I still had, one of the very earliest ones.)
-* SD card. I used one with 8 GB I had lying around, which is good enough for 8-10 books.
-* Case. The one I used is called http://www.reichelt.de/Kunststoff-Kleingehaeuse/EUROBOX-SW/3/index.html?&ACTION=3&LA=2&ARTICLE=50429&GROUPID=3355&artnr=EUROBOX+SW[Euro Box] from the local hardware store.
-It is a surprisingly good fit. Being able to detach the front and back panels is pretty handy.
+* Raspberry Pi (I still had a model B Rev. 1, one of the very earliest ones.)
+* SD card. I used one with 8 GB I had lying around, which is good enough for at least 10 books, depending
+on the size of the MP3 files.
+* Case. The one I used is called http://www.reichelt.de/Kunststoff-Kleingehaeuse/EUROBOX-SW/3/index.html?&ACTION=3&LA=2&ARTICLE=50429&GROUPID=3355&artnr=EUROBOX+SW[Euro Box] from the local electronics store.
+It is a surprisingly good fit. Being able to detach the front and back panels is pretty handy in case
+I have to use a LAN cable or if I want to remove the SD card.
 * Power switch
 * 5 colored push buttons. The ones I used are pretty crappy (and cheap!), but they were the most fitting 
-available at the local electronics store.
+available at the local store.
 * LED + socket
 * USB cable with micro USB plug on one end. I split the cable and cut the micro USB plug open with a
 sharp knife. The rest of the cable was extended and wired up with the power switch. (I think heat shrink tubing
@@ -68,17 +71,126 @@ mounting posts of the Euro Box, as can be seen in the picture above.
 
 == Software
 
-Most stuff regarding installation simply follows Willem van der Jagt's 
-http://willemvanderjagt.com/2014/08/16/audio-book-reader/[Blog]
+Most stuff regarding installation can be found on Willem van der Jagt's 
+http://willemvanderjagt.com/2014/08/16/audio-book-reader/[Blog].
+
+Since did a few things differently, I'll try to document the full installation process.
+
+=== Install and Configure Raspbian 
+
+Download https://www.raspberrypi.org/downloads/[Raspian] and install it on your SD card. The card should
+be 8GB or greater in order to hold the operating system and a number of books. 
+
+NOTE: The following describes a remote installation because I did not want to bother with 
+attaching keyboard and monitor to the Pi.
+
+Connect the Pi to your network with a LAN cable, boot and logon to the Pi via ssh (or putty on Windows)
+
+----
+$ ssh pi@raspberrypi
+----
+
+Password of user `pi` is `raspberry`.
+
+All of the follwing is done on the Pi.
+
+On first login, you will be greeted with a configuration dialog (which may also be invoked via `sudo raspi-config`). 
+Make sure to set `expandfs` to make Rasbian use the whole SD card.
+
+Update your Raspbian:
+
+----
+$ sudo apt-get update
+----
+
+Force audio through the 3.5 Audio jack:
+
+----
+$ sudo amixer cset numid=3 1
+----
+
+If you want to use WIFI to access your Pi, it must be configured. I simply used
+the https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md[command line].
+
+=== Music Player Daemon (MPD)
+
+The audio player uses the http://www.musicpd.org/[Music Player Daemon] as the backend.
+
+----
+$ sudo apt-get install mpd
+----
+
+Next, the https://github.com/Mic92/python-mpd2[python-mpd2] client library must be installed. 
+I used `pip` for installation, which must be installed first:
+
+----
+$ sudo apt-get install python-pip
+$ sudo pip install python-mpd2
+----
+
+Keeping track of the current book and autoplaying will be controlled by the client frontend. To
+avoid potential conflicts, we have to configure MPD to *not* automatically keep track of the current 
+book and start autoplaying a book on startup. This is done by editing `/etc/mpd.conf` and
+by commenting or deleting the line that starts with
+
+----
+state_file ...
+----
+
+You may also want to change the `music_directory` parameter
+to a directory different from `/var/lib/mpd/music`, for example to a directory under the user's home directory.
+
+=== Text to Speech
 
 For text-to-speech conversion I used Google's 
 https://android.googlesource.com/platform/external/svox/[SVOX Pico], which 
 provides a much better quality than eSpeak.
 
-I used a precompiled SVOX-Pico http://www.dr-bischoff.de/raspi/pico2wave.deb[Debian package for ARM].
+I used a precompiled http://www.dr-bischoff.de/raspi/pico2wave.deb[SVOX-Pico Debian package for ARM]
+provided by Andreas Bischoff. After downloading, install it with
 
-TBD: I will describe details about configuration and installation later.
+----
+$ sudo apt-get install libpopt-dev
+$ sudo dpkg --install pico2wave.deb
+----
 
+=== Installation of BookPlayer
+
+Clone this project to the `pi` user's home directory:
+
+----
+$ cd
+$ git clone https://github.com/nerk/BookPlayer
+----
+
+To configure the `sqlite` database, do the following:
+
+----
+$ cd BookPlayer
+$ sqlite3 state.db
+
+sqlite> .read db.sql
+sqlite> .exit
+----
+
+=== Autostart on Boot
+
+The player should start automatically when booting the pi and start
+playing the current book.
+
+----
+$ sudo nano /etc/rc.local
+----
+
+After the initial block of comments, add the following line:
+
+----
+/home/pi/BookPlayer/start &
+----
+
+=== Audiobook Structure
+
+TDB
 
 == Copyright and License
 
