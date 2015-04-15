@@ -22,7 +22,6 @@ __author__ = "Willem van der Jagt"
 
 
 db_file = "%s/%s" % (os.path.dirname(os.path.realpath(__file__)), 'state.db')
-print db_file
 mpd_conn = { "host" : "localhost", "port" : 6600 }
 gpio_pins = [
     { 'pin_id': 21, 'callback' : 'rewind', 'bounce_time' : 2000 }, # Board Rev. 1
