@@ -188,6 +188,12 @@ After the initial block of comments, add the following line:
 /home/pi/BookPlayer/start &
 ----
 
+Save and exit the editor. Make the `start`script executable:
+
+----
+chmod 755 /home/pi/BookPlayer/start
+----
+
 === Audiobook Structure
 
 TDB
