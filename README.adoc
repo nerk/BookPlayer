@@ -126,6 +126,12 @@ The audio player uses the http://www.musicpd.org/[Music Player Daemon] as the ba
 $ sudo apt-get install mpd
 ----
 
+Install a simple commandline client for mpd:
+
+----
+sudo apt-get install mpc
+----
+
 Next, the https://github.com/Mic92/python-mpd2[python-mpd2] client library must be installed. 
 I used `pip` for installation, which must be installed first:
 
