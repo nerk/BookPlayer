@@ -109,6 +109,12 @@ $ sudo apt-get update
 $ sudo apt-get upgrade
 ----
 
+Make sure Alsa is installed:
+
+----
+$ sudo apt-get install alsa-base alsa-utils 
+----
+
 Force audio through the 3.5 Audio jack:
 
 ----
@@ -120,24 +126,10 @@ the https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cl
 
 === Music Player Daemon (MPD)
 
-The audio player uses the http://www.musicpd.org/[Music Player Daemon] as the backend.
+This software uses the http://www.musicpd.org/[Music Player Daemon] as the backend.
 
 ----
 $ sudo apt-get install mpd
-----
-
-Install a simple commandline client for mpd:
-
-----
-sudo apt-get install mpc
-----
-
-Next, the https://github.com/Mic92/python-mpd2[python-mpd2] client library must be installed. 
-I used `pip` for installation, which must be installed first:
-
-----
-$ sudo apt-get install python-pip
-$ sudo pip install python-mpd2
 ----
 
 Keeping track of the current book and autoplaying will be controlled by the client frontend. To
@@ -152,10 +144,30 @@ state_file ...
 You may also want to change the `music_directory` parameter
 to a directory different from `/var/lib/mpd/music`, for example to a directory under the user's home directory.
 
+Start `mpd` as a service:
+
+----
+$ sudo service mpd start
+----
+
+Install a simple commandline client for mpd:
+
+----
+$ sudo apt-get install mpc
+----
+
+Next, the https://github.com/Mic92/python-mpd2[python-mpd2] client library must be installed. 
+I used `pip` for installation, which must be installed first:
+
+----
+$ sudo apt-get install python-pip
+$ sudo pip install python-mpd2
+----
+
 === Text to Speech
 
 For text-to-speech conversion I used Google's 
-https://android.googlesource.com/platform/external/svox/[SVOX Pico], which 
+https://android.googlesource.com/platform/external/svox/[SVOX Pico] for Android, which 
 provides a much better quality than eSpeak.
 
 I used a precompiled http://www.dr-bischoff.de/raspi/pico2wave.deb[SVOX-Pico Debian package for ARM]
