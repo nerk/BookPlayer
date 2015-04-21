@@ -97,22 +97,30 @@ $ ssh pi@raspberrypi
 
 Password of user `pi` is `raspberry`.
 
-All of the follwing is done on the Pi.
+Basic configuration:
 
-On first login, you will be greeted with a configuration dialog (which may also be invoked via `sudo raspi-config`). 
-Make sure to set `expandfs` to make Rasbian use the whole SD card.
+----
+$ sudo raspi-config 
+----
+
+Make sure to choose `Expand Filesystem` to make Rasbian use the whole SD card. 
+You should also `Change User Password`.  
+Under `Advanced Options`, you may also 
+want to change the hostname of the Pi from `raspberry` to something more 
+meaningful, e.g. `bookplayer`.
+
+Finish the configuration dialog with rebooting the Pi and ssh to the Pi again
+using your changed hostname and password:
+
+----
+$ ssh pi@bookplayer
+----
 
 Update your Raspbian:
 
 ----
 $ sudo apt-get update
 $ sudo apt-get upgrade
-----
-
-Make sure Alsa is installed:
-
-----
-$ sudo apt-get install alsa-base alsa-utils 
 ----
 
 Force audio through the 3.5 Audio jack:
@@ -144,10 +152,10 @@ state_file ...
 You may also want to change the `music_directory` parameter
 to a directory different from `/var/lib/mpd/music`, for example to a directory under the user's home directory.
 
-Start `mpd` as a service:
+Restart `mpd`:
 
 ----
-$ sudo service mpd start
+$ sudo service mpd restart
 ----
 
 Install a simple commandline client for mpd:
@@ -162,6 +170,12 @@ I used `pip` for installation, which must be installed first:
 ----
 $ sudo apt-get install python-pip
 $ sudo pip install python-mpd2
+----
+
+Install `Sqlite3` database:
+
+----
+$ sudo apt-get install sqlite3
 ----
 
 === Text to Speech
