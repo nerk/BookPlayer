@@ -327,6 +327,7 @@ This will produce track names in the correct format.
 
 == Shortcomings and Improvements
 
+* Using a switch to simply cut off power is not a good idea. Pi should be shutdown properly.
 * Checking of changes to the currently selected book in the main
 loop by polling is not really a good implementation.
 * The way button presses are handled could be improved. Implementation
