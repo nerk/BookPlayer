@@ -129,8 +129,24 @@ Force audio through the 3.5 Audio jack:
 $ sudo amixer cset numid=3 1
 ----
 
+=== WIFI
+
 If you want to use WIFI to access your Pi, it must be configured. I simply used
 the https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md[command line].
+
+Powermanagement caused some problem with my particular WIFI dongle. After some time of inactivity, the dongle shut 
+down and the connection dropped. Using `lsusb` showed the following:
+
+----
+Bus 001 Device 004: ID 0bda:8176 Realtek Semiconductor Corp. RTL8188CUS 802.11n WLAN Adapter
+----
+
+The solution is to disable power down when the device is idle. This can be achieved by creating file `/etc/modprobe.d/8192cu.conf` with the following content:
+
+----
+#prevent power down of wireless when idle
+options 8192cu rtw_power_mgnt=0 rtw_enusbss=0
+----
 
 === Music Player Daemon (MPD)
 
